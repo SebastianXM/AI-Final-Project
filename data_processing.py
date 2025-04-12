@@ -163,3 +163,9 @@ def loadLabelsFile(filename, n):
             break
         labels.append(int(line))
     return labels
+
+if __name__ == "__main__":
+    # Example usage
+    digits_train_data = loadDataFile("data/facedata/facedatatrain", 451, 60, 70)
+
+    print(digits_train_data[0].getPixels())
