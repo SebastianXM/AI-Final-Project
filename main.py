@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 from data_processing import get_data
 
-def nn_pytorch(X_train, y_train, X_test, y_test, X_val, y_val, input_size, percentage):
+def nn_pytorch(X_train, y_train, X_test, y_test, X_val, y_val, input_size, num_classes, percentage):
     # change to tensors
     X_train = torch.tensor(X_train, dtype=torch.float32)
     X_test = torch.tensor(X_test, dtype=torch.float32)
@@ -32,10 +32,7 @@ def nn_pytorch(X_train, y_train, X_test, y_test, X_val, y_val, input_size, perce
         def forward(self, x):
             return self.net(x)
         
-    num_classes = 10
-    lr = 0.001
-    momentum = 0.9
-
+    lr = 0.1
     model = NN(input_size, 100, num_classes)
     optimizer = torch.optim.SGD(model.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss()
@@ -82,60 +79,80 @@ def pytorch_method():
     face_X_train = np.array(face_X_train)
     face_y_train = np.array(face_y_train)
 
-    digits_accuracy = []
-    digits_training_time = []
-    face_accuracy = []
-    face_training_time = []
+    digits_accuracy_runs = []
+    digits_training_time_runs = []
+    face_accuracy_runs = []
+    face_training_time_runs = []
+
+    num_runs = 5
     percentages = [0.1 * i for i in range(1, 11)]
     for percentage in percentages:
         print(f"Percentage of training data: {int(percentage * 100)}%")
+        digits_accs = []
+        digits_times = []
+        face_accs = []
+        face_times = []
+        for run in range(num_runs):
+            print(f"Run {run+1}/{num_runs}")
+            num_digits_samples = int(percentage * len(digits_X_train))
+            indices = np.random.permutation(len(digits_X_train))
+            digits_X_train_subset = digits_X_train[indices[:num_digits_samples]]
+            digits_y_train_subset = digits_y_train[indices[:num_digits_samples]]
+            num_face_samples = int(percentage * len(face_X_train))
+            indices = np.random.permutation(len(face_X_train))
+            face_X_train_subset = face_X_train[indices[:num_face_samples]]
+            face_y_train_subset = face_y_train[indices[:num_face_samples]]
 
-        num_digits_samples = int(percentage * len(digits_X_train))
-        indices = np.random.permutation(len(digits_X_train))
-        digits_X_train_subset = digits_X_train[indices[:num_digits_samples]]
-        digits_y_train_subset = digits_y_train[indices[:num_digits_samples]]
-        num_face_samples = int(percentage * len(face_X_train))
-        indices = np.random.permutation(len(face_X_train))
-        face_X_train_subset = face_X_train[indices[:num_face_samples]]
-        face_y_train_subset = face_y_train[indices[:num_face_samples]]
+            print("Digits Dataset")
+            digits_test_accuracy, digits_total_time = nn_pytorch(digits_X_train_subset, digits_y_train_subset, digits_X_test, digits_y_test, digits_X_val, digits_y_val, 28*28, 10, percentage)
+            print("\nFace Dataset")
+            face_test_accuracy, face_total_time = nn_pytorch(face_X_train_subset, face_y_train_subset, face_X_test, face_y_test, face_X_val, face_y_val, 60*70, 2, percentage)
 
-        print("Digits Dataset")
-        digits_test_accuracy, digits_total_time = nn_pytorch(digits_X_train_subset, digits_y_train_subset, digits_X_test, digits_y_test, digits_X_val, digits_y_val, 28*28, percentage)
-        print("Face Dataset")
-        face_test_accuracy, face_total_time = nn_pytorch(face_X_train_subset, face_y_train_subset, face_X_test, face_y_test, face_X_val, face_y_val, 60*70, percentage)
+            digits_accs.append(digits_test_accuracy)
+            digits_times.append(digits_total_time)
+            face_accs.append(face_test_accuracy)
+            face_times.append(face_total_time)
 
-        digits_accuracy.append(digits_test_accuracy)
-        digits_training_time.append(digits_total_time)
-        face_accuracy.append(face_test_accuracy)
-        face_training_time.append(face_total_time)
+        digits_accuracy_runs.append(digits_accs)
+        digits_training_time_runs.append(digits_times)
+        face_accuracy_runs.append(face_accs)
+        face_training_time_runs.append(face_times)
         print("========================================")
 
+    digits_training_time_means = [np.mean(times) for times in digits_training_time_runs]
+    face_training_time_means = [np.mean(times) for times in face_training_time_runs]
+
     plt.figure(figsize=(8, 6))
-    plt.plot([p * 100 for p in percentages], digits_accuracy, marker='o', label="Digits Accuracy")
+    plt.plot([p * 100 for p in percentages], digits_training_time_means, marker='o', label="Digits Average Training Time")
+    plt.xlabel("Percentage of Training Data Used (%)")
+    plt.ylabel("Average Training Time (seconds)")
+    plt.title("Digits Average Training Time vs Percentage of Training Data Used")
+    plt.legend()
+
+    plt.figure(figsize=(8, 6))
+    plt.plot([p * 100 for p in percentages], face_training_time_means, marker='o', label="Face Average Training Time")
+    plt.xlabel("Percentage of Training Data Used (%)")
+    plt.ylabel("Average Training Time (seconds)")
+    plt.title("Face Average Training Time vs Percentage of Training Data Used")
+    plt.legend()
+
+    digits_accuracy_means = [np.mean(accs) for accs in digits_accuracy_runs]
+    digits_accuracy_stds = [np.std(accs) for accs in digits_accuracy_runs]
+    face_accuracy_means = [np.mean(accs) for accs in face_accuracy_runs]
+    face_accuracy_stds = [np.std(accs) for accs in face_accuracy_runs]
+
+    plt.figure(figsize=(8, 6))
+    plt.errorbar([p * 100 for p in percentages], digits_accuracy_means, yerr=digits_accuracy_stds, fmt='-o', capsize=5, label="Digits Accuracy (mean ± std)")
     plt.xlabel("Percentage of Training Data Used (%)")
     plt.ylabel("Accuracy (%)")
-    plt.title("Digits Accuracy vs Percentage of Training Data Used")
+    plt.title("Digits Accuracy (Average ± Std) vs Percentage of Training Data Used")
     plt.legend()
 
     plt.figure(figsize=(8, 6))
-    plt.plot([p * 100 for p in percentages], face_accuracy, marker='o', label="Face Accuracy")
+    plt.errorbar([p * 100 for p in percentages], face_accuracy_means, yerr=face_accuracy_stds, fmt='-o', capsize=5, label="Face Accuracy (mean ± std)")
     plt.xlabel("Percentage of Training Data Used (%)")
     plt.ylabel("Accuracy (%)")
-    plt.title("Face Accuracy vs Percentage of Training Data Used")
-    plt.legend()
-
-    plt.figure(figsize=(8, 6))
-    plt.plot([p * 100 for p in percentages], digits_training_time, marker='o', label="Digits Training Time")
-    plt.xlabel("Percentage of Training Data Used (%)")
-    plt.ylabel("Training Time (seconds)")
-    plt.title("Digits Training Time vs Percentage of Training Data Used")
-    plt.legend()
-
-    plt.figure(figsize=(8, 6))
-    plt.plot([p * 100 for p in percentages], face_training_time, marker='o', label="Face Training Time")
-    plt.xlabel("Percentage of Training Data Used (%)")
-    plt.ylabel("Training Time (seconds)")
-    plt.title("Face Training Time vs Percentage of Training Data Used")
+    plt.title("Face Accuracy (Average ± Std) vs Percentage of Training Data Used")
     plt.legend()
 
     plt.tight_layout()
