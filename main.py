@@ -7,15 +7,13 @@ import matplotlib.pyplot as plt
 
 from data_processing import get_data
 
-def nn_pytorch(X_train, y_train, X_test, y_test, X_val, y_val, input_size, num_classes, percentage):
+def nn_pytorch(X_train, y_train, X_test, y_test, input_size, num_classes, percentage):
     # change to tensors
     X_train = torch.tensor(X_train, dtype=torch.float32)
     X_test = torch.tensor(X_test, dtype=torch.float32)
-    X_val = torch.tensor(X_val, dtype=torch.float32)
 
     y_train = torch.tensor(y_train, dtype=torch.long)
     y_test = torch.tensor(y_test, dtype=torch.long)
-    y_val = torch.tensor(y_val, dtype=torch.long)
 
     # three-layer neural network
     class NN(nn.Module):
@@ -73,7 +71,7 @@ def nn_pytorch(X_train, y_train, X_test, y_test, X_val, y_val, input_size, num_c
     return accuracy, total_time
 
 def pytorch_method():
-    digits_X_train, digits_y_train, digits_X_test, digits_y_test, digits_X_val, digits_y_val, face_X_train, face_y_train, face_X_test, face_y_test, face_X_val, face_y_val = get_data()
+    digits_X_train, digits_y_train, digits_X_test, digits_y_test, face_X_train, face_y_train, face_X_test, face_y_test = get_data()
     digits_X_train = np.array(digits_X_train)
     digits_y_train = np.array(digits_y_train)
     face_X_train = np.array(face_X_train)
@@ -104,9 +102,9 @@ def pytorch_method():
             face_y_train_subset = face_y_train[indices[:num_face_samples]]
 
             print("Digits Dataset")
-            digits_test_accuracy, digits_total_time = nn_pytorch(digits_X_train_subset, digits_y_train_subset, digits_X_test, digits_y_test, digits_X_val, digits_y_val, 28*28, 10, percentage)
+            digits_test_accuracy, digits_total_time = nn_pytorch(digits_X_train_subset, digits_y_train_subset, digits_X_test, digits_y_test, 28*28, 10, percentage)
             print("\nFace Dataset")
-            face_test_accuracy, face_total_time = nn_pytorch(face_X_train_subset, face_y_train_subset, face_X_test, face_y_test, face_X_val, face_y_val, 60*70, 2, percentage)
+            face_test_accuracy, face_total_time = nn_pytorch(face_X_train_subset, face_y_train_subset, face_X_test, face_y_test, 60*70, 2, percentage)
 
             digits_accs.append(digits_test_accuracy)
             digits_times.append(digits_total_time)
