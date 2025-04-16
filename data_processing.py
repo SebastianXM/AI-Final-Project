@@ -163,3 +163,43 @@ def loadLabelsFile(filename, n):
             break
         labels.append(int(line))
     return labels
+
+def get_data():
+    # load digits data
+    digits_train_data = loadDataFile("data/digitdata/trainingimages", 5000, 28, 28)
+    digits_train_labels = loadLabelsFile("data/digitdata/traininglabels", 5000)
+    digits_test_data = loadDataFile("data/digitdata/testimages", 1000, 28, 28)
+    digits_test_labels = loadLabelsFile("data/digitdata/testlabels", 1000)
+    digits_val_data = loadDataFile("data/digitdata/validationimages", 1000, 28, 28)
+    digits_val_labels = loadLabelsFile("data/digitdata/validationlabels", 1000)
+
+    # load face data
+    face_train_data = loadDataFile("data/facedata/facedatatrain", 451, 60, 70)
+    face_train_labels = loadLabelsFile("data/facedata/facedatatrainlabels", 451)
+    face_test_data = loadDataFile("data/facedata/facedatatest", 150, 60, 70)
+    face_test_labels = loadLabelsFile("data/facedata/facedatatestlabels", 150)
+    face_val_data = loadDataFile("data/facedata/facedatavalidation", 301, 60, 70)
+    face_val_labels = loadLabelsFile("data/facedata/facedatavalidationlabels", 301)
+
+    # create features
+    digits_X_train = [[[0 if pixel == 0 else (1 if pixel == 1 else 2) for pixel in row] for row in data.getPixels()] for data in digits_train_data]
+    digits_X_test = [[[0 if pixel == 0 else (1 if pixel == 1 else 2) for pixel in row] for row in data.getPixels()] for data in digits_test_data]
+    digits_X_val = [[[0 if pixel == 0 else (1 if pixel == 1 else 2) for pixel in row] for row in data.getPixels()] for data in digits_val_data]
+
+    face_X_train = [[[0 if pixel == 0 else 1 for pixel in row] for row in data.getPixels()] for data in face_train_data]
+    face_X_test = [[[0 if pixel == 0 else 1 for pixel in row] for row in data.getPixels()] for data in face_test_data]
+    face_X_val = [[[0 if pixel == 0 else 1 for pixel in row] for row in data.getPixels()] for data in face_val_data]
+    face_X_train = [sample[:60] for sample in face_X_train]
+    face_X_test = [sample[:60] for sample in face_X_test]
+    face_X_val = [sample[:60] for sample in face_X_val]
+
+    # create labelsp
+    digits_y_train = digits_train_labels
+    digits_y_test = digits_test_labels
+    digits_y_val = digits_val_labels
+
+    face_y_train = face_train_labels
+    face_y_test = face_test_labels
+    face_y_val = face_val_labels
+
+    return digits_X_train, digits_y_train, digits_X_test, digits_y_test, digits_X_val, digits_y_val, face_X_train, face_y_train, face_X_test, face_y_test, face_X_val, face_y_val
