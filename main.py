@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 from data_processing import get_data
 
-def nn_pytorch(X_train, y_train, X_test, y_test, input_size, num_classes, percentage):
+def nn_pytorch(X_train, y_train, X_test, y_test, input_size, num_classes):
     # change to tensors
     X_train = torch.tensor(X_train, dtype=torch.float32)
     X_test = torch.tensor(X_test, dtype=torch.float32)
@@ -102,9 +102,9 @@ def pytorch_method():
             face_y_train_subset = face_y_train[indices[:num_face_samples]]
 
             print("Digits Dataset")
-            digits_test_accuracy, digits_total_time = nn_pytorch(digits_X_train_subset, digits_y_train_subset, digits_X_test, digits_y_test, 28*28, 10, percentage)
+            digits_test_accuracy, digits_total_time = nn_pytorch(digits_X_train_subset, digits_y_train_subset, digits_X_test, digits_y_test, 28*28, 10)
             print("\nFace Dataset")
-            face_test_accuracy, face_total_time = nn_pytorch(face_X_train_subset, face_y_train_subset, face_X_test, face_y_test, 60*70, 2, percentage)
+            face_test_accuracy, face_total_time = nn_pytorch(face_X_train_subset, face_y_train_subset, face_X_test, face_y_test, 60*70, 2)
 
             digits_accs.append(digits_test_accuracy)
             digits_times.append(digits_total_time)
