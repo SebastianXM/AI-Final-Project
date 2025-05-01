@@ -142,6 +142,8 @@ def perceptron_method():
 
     digits_training_time_means = [np.mean(times) for times in digits_training_time_runs]
     face_training_time_means = [np.mean(times) for times in face_training_time_runs]
+    for i in range(len(digits_training_time_means)):
+        print(f"Percentage: {percentages[i] * 100:.0f}%, Digits Average Training Time: {digits_training_time_means[i]:.2f} seconds, Face Average Training Time: {face_training_time_means[i]:.2f} seconds")
 
     plt.figure(figsize=(8, 6))
     plt.plot([p * 100 for p in percentages], digits_training_time_means, marker='o', label="Digits Average Training Time")
@@ -161,6 +163,8 @@ def perceptron_method():
     digits_accuracy_stds = [np.std(accs) for accs in digits_accuracy_runs]
     face_accuracy_means = [np.mean(accs) for accs in face_accuracy_runs]
     face_accuracy_stds = [np.std(accs) for accs in face_accuracy_runs]
+    for i in range(len(digits_accuracy_means)):
+        print(f"Percentage: {percentages[i] * 100:.0f}%, Digits Average Accuracy: {digits_accuracy_means[i]:.2f} ± {digits_accuracy_stds[i]:.2f}, Face Average Accuracy: {face_accuracy_means[i]:.2f} ± {face_accuracy_stds[i]:.2f}")
 
     plt.figure(figsize=(8, 6))
     plt.errorbar([p * 100 for p in percentages], digits_accuracy_means, yerr=digits_accuracy_stds, fmt='-o', capsize=5, label="Digits Accuracy (mean ± std)")

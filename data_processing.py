@@ -186,7 +186,7 @@ def get_data():
     face_X_train = [sample[:60] for sample in face_X_train]
     face_X_test = [sample[:60] for sample in face_X_test]
 
-    # create labelsp
+    # create labels
     digits_y_train = digits_train_labels
     digits_y_test = digits_test_labels
 
