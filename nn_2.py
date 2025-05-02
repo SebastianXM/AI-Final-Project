@@ -91,7 +91,7 @@ class NeuralNetwork:
             self.bias_2 -= learning_rate * db2
             self.bias_3 -= learning_rate * db3
 
-            print(f"Epoch {i+1}/{epochs}, Loss: {loss:.4f}")
+            # print(f"Epoch {i+1}/{epochs}, Loss: {loss:.4f}")
 
         end_time = time.time()
         total_time = end_time - start_time
@@ -144,8 +144,8 @@ if __name__ == "__main__":
             digits_nn = NeuralNetwork(28*28, 100, 100, 10)
             face_nn = NeuralNetwork(60*70, 100, 100, 2)
             
-            digits_total_time = digits_nn.train(digits_X_train_subset, digits_y_train_subset, 50, 0.1, 0.0)
-            face_total_time = face_nn.train(face_X_train_subset, face_y_train_subset, 50, 0.1, 0)
+            digits_total_time = digits_nn.train(digits_X_train_subset, digits_y_train_subset, 100, 0.1, 0.0)
+            face_total_time = face_nn.train(face_X_train_subset, face_y_train_subset, 100, 0.1, 0)
 
             digits_test_accuracy = digits_nn.test(digits_X_test, digits_y_test)
             face_test_accuracy = face_nn.test(face_X_test, face_y_test)

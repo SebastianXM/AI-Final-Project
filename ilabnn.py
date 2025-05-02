@@ -100,7 +100,6 @@ class NeuralNetwork:
             self.weights_3 -= learning_rate * grad_3
             loss = self.compute_cost(X_train, y_train, regularization)
             loss_history.append(loss)
-            # print(f"Epoch {i:3d} / {epochs:3d}   loss = {loss:.6f}")
         end_time = time.time()
         total_time = end_time - start_time
         print(f"Total Training Time: {total_time:.2f} seconds")
@@ -198,10 +197,10 @@ def rel_error(A, B):
     
 def store_weights(classifier, neural_net, percentage, run):
     if classifier == 0: # digits dataset
-        filename = f"digitWeights/{int(percentage*100)}/run{run}.npz"
+        filename = f"digitWeights/{int(percentage*100)}_run{run}.npz"
     else:
-        filename = f"faceWeights/{int(percentage*100)}/run{run}.npz"
-    path = os.path.join(os.getenv("neural_net_weights_path"), filename)
+        filename = f"faceWeights/{int(percentage*100)}_run{run}.npz"
+    path = os.path.join("/common/home/tdn39/Desktop/DigitRecognition/neuralNetworkWeights", filename)
     np.savez(path, weights_1 = neural_net.weights_1, weights_2 = neural_net.weights_2, weights_3 = neural_net.weights_3)
 
 if __name__ == "__main__":
@@ -218,28 +217,6 @@ if __name__ == "__main__":
 
     np.divide(digits_X_train, np.amax(digits_X_train), out=digits_X_train)
     np.divide(face_X_train, np.amax(face_X_train), out=face_X_train)
-    # digits_x_train = np.reshape(digits_X_train, (len(digits_X_train), -1))
-    # face_x_train = np.reshape(face_X_train, (len(face_X_train), -1))
-
-    # test_digits_nn = NeuralNetwork(28*28, 100, 100, 10)
-    # test_face_nn = NeuralNetwork(60*70, 100, 100, 1)
-
-    # idx = np.random.choice(len(digits_x_train), size=5, replace=False)
-    # X_small = digits_x_train[idx]
-    # y_small = digits_y_train[idx]
-
-    # ng1, ag1, ng2, ag2, ng3, ag3 = gradient_check(
-    #     test_digits_nn, X_small, y_small,
-    #     reg=0.1, epsilon=1e-4
-    # )
-
-    # print("Gradient Check for gradient 1: ", rel_error(ng1, ag1))
-    # print("Gradient Check for gradient 2: ", rel_error(ng2, ag2))
-    # print("Gradient Check for gradient 3: ", rel_error(ng3, ag3))
-
-    # for eps in [1e-3, 1e-4, 1e-5, 1e-6]:
-    #     ng1, ag1, _, _, _, _ = gradient_check(test_digits_nn, X_small, y_small, reg=0.0, epsilon=eps)
-    #     print(f"ε={eps:>6}: rel-err layer1 = {rel_error(ng1, ag1):.3g}")
 
     digits_accuracy_runs = []
     digits_training_time_runs = []
@@ -288,11 +265,6 @@ if __name__ == "__main__":
         face_training_time_runs.append(face_times)
         print("========================================")
 
-    
-    np.save("digits_accuracy_runs.npy", digits_accuracy_runs)
-    np.save("digits_training_time_runs.npy", digits_training_time_runs)
-    np.save("face_accuracy_runs.npy", face_accuracy_runs)
-    np.save("face_training_time_runs.npy", face_training_time_runs)
     digits_training_time_means = [np.mean(times) for times in digits_training_time_runs]
     face_training_time_means = [np.mean(times) for times in face_training_time_runs]
 
