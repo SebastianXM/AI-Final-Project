@@ -1,7 +1,10 @@
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+import os
+from dotenv import load_dotenv
 from data_processing import get_data
+load_dotenv()
 
 def relu(x):
     return np.maximum(0, x)
@@ -30,6 +33,14 @@ class NeuralNetwork:
         self.A1 = None
         self.A2 = None
         self.A3 = None
+
+    def set_weights_biases(self, weights_1, weights_2, weights_3, bias_1, bias_2, bias_3):
+        self.weights_1 = weights_1
+        self.weights_2 = weights_2
+        self.weights_3 = weights_3
+        self.bias_1 = bias_1
+        self.bias_2 = bias_2
+        self.bias_3 = bias_3
 
     def forward(self, x):
         self.Z1 = np.dot(x, self.weights_1) + self.bias_1
@@ -105,6 +116,20 @@ class NeuralNetwork:
         accuracy = np.mean(predictions == y_test) * 100
         print(f"Test Accuracy: {accuracy:.4f}%")
         return accuracy
+    
+def store_weights_biases_nn2(classifier, neural_net, percentage, run):
+    filename = ""
+    if classifier == 0: # digits dataset
+        filename = f"digitWeights/{int(percentage*100)}/run{run}.npz"
+    else:
+        filename = f"faceWeights/{int(percentage*100)}/run{run}.npz"
+
+    path = os.path.join(os.getenv("neural_net_weights_2_path"), filename)
+    np.savez(path, weights_1=neural_net.weights_1, weights_2=neural_net.weights_2, weights_3=neural_net.weights_3, bias_1=neural_net.bias_1, bias_2=neural_net.bias_2, bias_3=neural_net.bias_3)
+    
+def store_time_or_accuracy(name, time_or_accuracy_list):
+    path = os.path.join(os.getenv("neural_net_2_time_accuracy_path"), f"{name}.npz")
+    np.save(path, time_or_accuracy_list)
 
 if __name__ == "__main__":
     digits_X_train, digits_y_train, digits_X_test, digits_y_test, face_X_train, face_y_train, face_X_test, face_y_test = get_data()
@@ -146,6 +171,9 @@ if __name__ == "__main__":
             
             digits_total_time = digits_nn.train(digits_X_train_subset, digits_y_train_subset, 100, 0.1, 0.0)
             face_total_time = face_nn.train(face_X_train_subset, face_y_train_subset, 100, 0.1, 0)
+            
+            store_weights_biases_nn2(0, digits_nn, percentage, run)
+            store_weights_biases_nn2(1, face_nn, percentage, run)
 
             digits_test_accuracy = digits_nn.test(digits_X_test, digits_y_test)
             face_test_accuracy = face_nn.test(face_X_test, face_y_test)
@@ -160,6 +188,11 @@ if __name__ == "__main__":
         face_accuracy_runs.append(face_accs)
         face_training_time_runs.append(face_times)
         print("========================================")
+
+    store_time_or_accuracy("digits_accuracy", digits_accuracy_runs)
+    store_time_or_accuracy("digits_training_time", digits_training_time_runs)
+    store_time_or_accuracy("face_accuracy", face_accuracy_runs)
+    store_time_or_accuracy("face_training_time", face_training_time_runs)
 
     digits_training_time_means = [np.mean(times) for times in digits_training_time_runs]
     face_training_time_means = [np.mean(times) for times in face_training_time_runs]

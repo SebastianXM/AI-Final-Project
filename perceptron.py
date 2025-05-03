@@ -8,87 +8,93 @@ from data_processing import get_data
 
 load_dotenv()
 
-def perceptron_train(classifier, X_train, y_train, input_size, num_classes, percentage):
 
-    weights = []
-    for i in range(num_classes):
-        weights.append(np.zeros(input_size+1))
-    X_train = np.reshape(X_train, (len(X_train), -1))
-    max_epochs = 100
-    no_change = False
-    start_time = time.time()
-    for i in range(max_epochs):
-        if no_change:
-            break
-        no_change = True
-        for j in range(len(X_train)):
-            augmented_x = np.insert(X_train[j], 0, 1)
-            if num_classes == 1:
-                prediction = np.dot(weights[0], augmented_x)
-                if prediction >= 0 and y_train[j] == 0:
-                    weights[0] -= augmented_x
-                    no_change = False
-                elif prediction < 0 and y_train[j] == 1:
-                    weights[0] += augmented_x
-                    no_change = False
-                else:
-                    continue
+class Perceptron:
+    def __init__(self, input_size, num_classes):
+        weights = []
+        for i in range(num_classes):
+            weights.append(np.zeros(input_size+1)) # one perceptron for each output class
+        self.weights = weights
+        self.input_size = input_size
+        self.num_classes = num_classes
+
+    def set_weights(self, weights):
+        self.weights = weights
+
+    def predict(self, augmented_x):
+        prediction = -1
+        prediction_value = -np.inf
+        if self.num_classes == 1:
+            prediction_value = np.dot(self.weights[0], augmented_x)
+            if prediction_value >= 0:
+                prediction = 1
             else:
-                prediction = (-1, -np.inf)
-                for k in range(num_classes):
-                    temp_prediction = np.dot(weights[k], augmented_x)
-                    if temp_prediction > prediction[1]:
-                        prediction = (k, temp_prediction)
-                
-                if prediction[0] != y_train[j]:
-                    weights[prediction[0]] -= augmented_x
-                    weights[y_train[j]] += augmented_x
-                    no_change = False
-    end_time = time.time()
-    total_time = end_time - start_time
-    filename = ""
-    if classifier == 0: # digits dataset
-        filename = f"digitWeights/{int(percentage*100)}.npy"
-    else:
-        filename = f"faceWeights/{int(percentage*100)}.npy"
-    path = os.path.join(os.getenv("perceptron_weights_path"), filename)
-    np.save(path, weights)
-    return total_time
-    
-
-def perceptron_test(classifier, X_test, y_test, num_classes, percentage):
-    correct = 0
-    total = len(X_test)
-    weights = []
-    filename = ""
-    if classifier == 0: # digits dataset
-        filename = f"digitWeights/{int(percentage*100)}.npy"
-    else:
-        filename = f"faceWeights/{int(percentage*100)}.npy"
-    path = os.path.join(os.getenv("perceptron_weights_path"), filename)
-    weights = np.load(path, allow_pickle=True)
-    X_test = np.reshape(X_test, (len(X_test), -1))
-
-    for i in range(len(X_test)):
-        augmented_x = np.insert(X_test[i], 0, 1)
-        if num_classes == 1:
-            prediction = np.dot(weights[0], augmented_x)
-            if (prediction >= 0 and y_test[i] == 1) or (prediction < 0 and y_test[i] == 0):
-                correct += 1
+                prediction = 0
         else:
-            prediction = (-1, -np.inf)
-            for k in range(num_classes):
-                temp_prediction = np.dot(weights[k], augmented_x)
-                if temp_prediction > prediction[1]:
-                    prediction = (k, temp_prediction)
-            if prediction[0] == y_test[i]:
+            for k in range(self.num_classes):
+                temp_prediction = np.dot(self.weights[k], augmented_x)
+                if temp_prediction > prediction_value:
+                    prediction_value = temp_prediction
+                    prediction = k
+        return prediction
+    
+    def update_weights(self, augmented_x, prediction, y_train):
+        if self.num_classes == 1:
+            if prediction != y_train:
+                if y_train == 1:
+                    self.weights[0] += augmented_x
+                else:
+                    self.weights[0] -= augmented_x
+        else:
+            if prediction != y_train:
+                self.weights[prediction] -= augmented_x
+                self.weights[y_train] += augmented_x
+
+    def train(self, X_train, y_train, max_epochs=100):
+        X_train = np.reshape(X_train, (len(X_train), -1))
+        no_change = False 
+        start_time = time.time()
+        for i in range(max_epochs):
+            if no_change:
+                break
+            no_change = True
+            for j in range(len(X_train)):
+                augmented_x = np.insert(X_train[j], 0, 1)
+                prediction = self.predict(augmented_x)
+                if prediction != y_train[j]:
+                    self.update_weights(augmented_x, prediction, y_train[j])
+                    no_change = False
+        end_time = time.time()
+        total_time = end_time - start_time
+        return total_time
+    
+    def test(self, X_test, y_test):
+        correct = 0
+        total = len(X_test)
+        X_test = np.reshape(X_test, (len(X_test), -1))
+        for i in range(len(X_test)):
+            augmented_x = np.insert(X_test[i], 0, 1)
+            prediction = self.predict(augmented_x)
+            if prediction == y_test[i]:
                 correct += 1
+        accuracy = 100 * correct / total
+        print(f"Test Accuracy: {accuracy:.4f}%")
+        return accuracy
+    
+def store_weights(classifier, perceptron, percentage, run):
+    filename = ""
+    if classifier == 0: # digits dataset
+        filename = f"digitWeights/{int(percentage*100)}/run{run}.npz"
+    else:
+        filename = f"faceWeights/{int(percentage*100)}/run{run}.npz"
+    path = os.path.join(os.getenv("perceptron_weights_path"), filename)
+    np.savez(path, weights=np.array(perceptron.weights)) 
 
-    accuracy = 100 * correct / total
-    print(f"Test Accuracy: {accuracy:.4f}%")
-    return accuracy
+def store_time_or_accuracy(name, time_or_accuracy_list):
+    path = os.path.join(os.getenv("perceptron_time_accuracy_path"), f"{name}.npz")
+    np.save(path, time_or_accuracy_list)
 
-def perceptron_method():
+if __name__ == "__main__":
     digits_X_train, digits_y_train, digits_X_test, digits_y_test, face_X_train, face_y_train, face_X_test, face_y_test = get_data()
     digits_X_train = np.array(digits_X_train)
     digits_y_train = np.array(digits_y_train)
@@ -123,11 +129,17 @@ def perceptron_method():
             face_X_train_subset = face_X_train[indices[:num_face_samples]]
             face_y_train_subset = face_y_train[indices[:num_face_samples]]
 
-            digits_total_time = perceptron_train(0, digits_X_train_subset, digits_y_train_subset, 28*28, 10, percentage)
-            face_total_time = perceptron_train(1, face_X_train_subset, face_y_train_subset, 60*70, 1, percentage)
+            digits_perceptron = Perceptron(28*28, 10)
+            face_perceptron = Perceptron(60*70, 1)
+            
+            digits_total_time = digits_perceptron.train(digits_X_train_subset, digits_y_train_subset, 100)
+            face_total_time = face_perceptron.train(face_X_train_subset, face_y_train_subset, 100)
 
-            digits_test_accuracy = perceptron_test(0, digits_X_test, digits_y_test, 10, percentage)
-            face_test_accuracy = perceptron_test(1, face_X_test, face_y_test, 1, percentage)
+            store_weights(0, digits_perceptron, percentage, run)
+            store_weights(1, face_perceptron, percentage, run)
+
+            digits_test_accuracy = digits_perceptron.test(digits_X_test, digits_y_test)
+            face_test_accuracy = face_perceptron.test(face_X_test, face_y_test)
 
             digits_accs.append(digits_test_accuracy)
             digits_times.append(digits_total_time)
@@ -139,6 +151,11 @@ def perceptron_method():
         face_accuracy_runs.append(face_accs)
         face_training_time_runs.append(face_times)
         print("========================================")
+
+    store_time_or_accuracy("digits_accuracy", digits_accuracy_runs)
+    store_time_or_accuracy("digits_training_time", digits_training_time_runs)
+    store_time_or_accuracy("face_accuracy", face_accuracy_runs)
+    store_time_or_accuracy("face_training_time", face_training_time_runs)
 
     digits_training_time_means = [np.mean(times) for times in digits_training_time_runs]
     face_training_time_means = [np.mean(times) for times in face_training_time_runs]
@@ -182,6 +199,3 @@ def perceptron_method():
 
     plt.tight_layout()
     plt.show()
-
-if __name__ == "__main__":
-    perceptron_method()

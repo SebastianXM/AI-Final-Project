@@ -204,6 +204,10 @@ def store_weights(classifier, neural_net, percentage, run):
     path = os.path.join(os.getenv("neural_net_weights_path"), filename)
     np.savez(path, weights_1 = neural_net.weights_1, weights_2 = neural_net.weights_2, weights_3 = neural_net.weights_3)
 
+def store_time_or_accuracy(name, time_or_accuracy_list):
+    path = os.path.join(os.getenv("neural_net_time_accuracy_path"), f"{name}.npz")
+    np.save(path, time_or_accuracy_list)
+
 if __name__ == "__main__":
     digits_X_train, digits_y_train, digits_X_test, digits_y_test, face_X_train, face_y_train, face_X_test, face_y_test = get_data()
     digits_X_train = np.array(digits_X_train).astype(np.longdouble)
@@ -289,10 +293,11 @@ if __name__ == "__main__":
         print("========================================")
 
     
-    np.save("digits_accuracy_runs.npy", digits_accuracy_runs)
-    np.save("digits_training_time_runs.npy", digits_training_time_runs)
-    np.save("face_accuracy_runs.npy", face_accuracy_runs)
-    np.save("face_training_time_runs.npy", face_training_time_runs)
+    store_time_or_accuracy("digits_accuracy", digits_accuracy_runs)
+    store_time_or_accuracy("digits_training_time", digits_training_time_runs)
+    store_time_or_accuracy("face_accuracy", face_accuracy_runs)
+    store_time_or_accuracy("face_training_time", face_training_time_runs)
+    
     digits_training_time_means = [np.mean(times) for times in digits_training_time_runs]
     face_training_time_means = [np.mean(times) for times in face_training_time_runs]
 
