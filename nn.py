@@ -100,7 +100,6 @@ class NeuralNetwork:
             self.weights_3 -= learning_rate * grad_3
             loss = self.compute_cost(X_train, y_train, regularization)
             loss_history.append(loss)
-            # print(f"Epoch {i:3d} / {epochs:3d}   loss = {loss:.6f}")
         end_time = time.time()
         total_time = end_time - start_time
         print(f"Total Training Time: {total_time:.2f} seconds")
@@ -141,57 +140,6 @@ class NeuralNetwork:
         + np.sum(self.weights_3[:,1:]**2)
         )
         return total_loss + reg
-def gradient_check(nn, X_sample, Y_sample, reg, epsilon=1e-4, verbose=False):
-    X_sample = np.reshape(X_sample, (len(X_sample), -1))
-    delta_1 = np.zeros_like(nn.weights_1)
-    delta_2 = np.zeros_like(nn.weights_2)
-    delta_3 = np.zeros_like(nn.weights_3)
-    m = len(X_sample)
-    for x,y in zip(X_sample, Y_sample):
-        nn.forward(x)
-        g1,g2,g3 = nn.back_propogation(x,y)
-        delta_1 += g1
-        delta_2 += g2
-        delta_3 += g3
-    D1 = delta_1/m; D2 = delta_2/m; D3 = delta_3/m
-    D1[:,1:] += (reg/m)*nn.weights_1[:,1:]
-    D2[:,1:] += (reg/m)*nn.weights_2[:,1:]
-    D3[:,1:] += (reg/m)*nn.weights_3[:,1:]
-
-    num_grad1 = np.zeros_like(nn.weights_1)
-    for i in range(nn.weights_1.shape[0]):
-      for j in range(nn.weights_1.shape[1]):
-        old = nn.weights_1[i,j]
-        nn.weights_1[i,j] = old + epsilon
-        j_plus = nn.compute_cost(X_sample, Y_sample, reg)
-        nn.weights_1[i,j] = old - epsilon
-        j_minus = nn.compute_cost(X_sample, Y_sample, reg)
-        num_grad1[i,j] = (j_plus - j_minus)/(2*epsilon)
-        nn.weights_1[i,j] = old
-
-    num_grad2 = np.zeros_like(nn.weights_2)
-    for i in range(nn.weights_2.shape[0]):
-      for j in range(nn.weights_2.shape[1]):
-        old = nn.weights_2[i,j]
-        nn.weights_2[i,j] = old + epsilon
-        j_plus = nn.compute_cost(X_sample, Y_sample, reg)
-        nn.weights_2[i,j] = old - epsilon
-        j_minus = nn.compute_cost(X_sample, Y_sample, reg)
-        num_grad2[i,j] = (j_plus - j_minus)/(2*epsilon)
-        nn.weights_2[i,j] = old
-
-    num_grad3 = np.zeros_like(nn.weights_3)
-    for i in range(nn.weights_3.shape[0]):
-      for j in range(nn.weights_3.shape[1]):
-        old = nn.weights_3[i,j]
-        nn.weights_3[i,j] = old + epsilon
-        j_plus = nn.compute_cost(X_sample, Y_sample, reg)
-        nn.weights_3[i,j] = old - epsilon
-        j_minus = nn.compute_cost(X_sample, Y_sample, reg)
-        num_grad3[i,j] = (j_plus - j_minus)/(2*epsilon)
-        nn.weights_3[i,j] = old
-
-    return (num_grad1, D1, num_grad2, D2, num_grad3, D3)
 
 def rel_error(A, B):
     return np.max(np.abs(A-B) / (np.maximum(1e-8, np.abs(A)+np.abs(B))))
@@ -222,28 +170,6 @@ if __name__ == "__main__":
 
     np.divide(digits_X_train, np.amax(digits_X_train), out=digits_X_train)
     np.divide(face_X_train, np.amax(face_X_train), out=face_X_train)
-    # digits_x_train = np.reshape(digits_X_train, (len(digits_X_train), -1))
-    # face_x_train = np.reshape(face_X_train, (len(face_X_train), -1))
-
-    # test_digits_nn = NeuralNetwork(28*28, 100, 100, 10)
-    # test_face_nn = NeuralNetwork(60*70, 100, 100, 1)
-
-    # idx = np.random.choice(len(digits_x_train), size=5, replace=False)
-    # X_small = digits_x_train[idx]
-    # y_small = digits_y_train[idx]
-
-    # ng1, ag1, ng2, ag2, ng3, ag3 = gradient_check(
-    #     test_digits_nn, X_small, y_small,
-    #     reg=0.1, epsilon=1e-4
-    # )
-
-    # print("Gradient Check for gradient 1: ", rel_error(ng1, ag1))
-    # print("Gradient Check for gradient 2: ", rel_error(ng2, ag2))
-    # print("Gradient Check for gradient 3: ", rel_error(ng3, ag3))
-
-    # for eps in [1e-3, 1e-4, 1e-5, 1e-6]:
-    #     ng1, ag1, _, _, _, _ = gradient_check(test_digits_nn, X_small, y_small, reg=0.0, epsilon=eps)
-    #     print(f"ε={eps:>6}: rel-err layer1 = {rel_error(ng1, ag1):.3g}")
 
     digits_accuracy_runs = []
     digits_training_time_runs = []
@@ -297,7 +223,7 @@ if __name__ == "__main__":
     store_time_or_accuracy("digits_training_time", digits_training_time_runs)
     store_time_or_accuracy("face_accuracy", face_accuracy_runs)
     store_time_or_accuracy("face_training_time", face_training_time_runs)
-    
+
     digits_training_time_means = [np.mean(times) for times in digits_training_time_runs]
     face_training_time_means = [np.mean(times) for times in face_training_time_runs]
 
