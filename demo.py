@@ -109,10 +109,7 @@ def test_pytorch_nn(classifier, X_test, y_test, num_classes, percentage, run):
 
     model = create_pytorch_nn(classifier, X_test.shape[1], num_classes, percentage, run)
 
-    X_test_tensor = torch.tensor(X_test, dtype=torch.float32)
-    y_test_tensor = torch.tensor(y_test, dtype=torch.long)
-
-    return model.test_model(X_test_tensor, y_test_tensor)
+    return model.test_model(X_test, y_test)
 
 def test_pytorch_nn_individual(classifier, X, num_classes, percentage, run):
     X_flat = X.flatten()

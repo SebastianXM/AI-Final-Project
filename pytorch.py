@@ -61,8 +61,8 @@ class PyTorchNN(nn.Module):
     def test_model(self, X_test, y_test):
 
         X_test_flat = np.reshape(X_test, (X_test.shape[0], -1))
-        X_test_tensor = torch.tensor(X_test_flat, dtype=torch.float32)
-        y_test_tensor = torch.tensor(y_test, dtype=torch.long)
+        X_test_tensor = torch.from_numpy(X_test_flat).float()
+        y_test_tensor = torch.from_numpy(y_test).long()  
 
         self.eval()
         correct = 0
